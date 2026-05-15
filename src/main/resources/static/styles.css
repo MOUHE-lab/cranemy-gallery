@@ -129,6 +129,16 @@ img {
   gap: 20px;
 }
 
+.admin-locked {
+  display: grid;
+  min-height: calc(100vh - 150px);
+  place-items: center;
+}
+
+.admin-locked .admin-card {
+  width: min(520px, 100%);
+}
+
 .admin-page-head {
   display: flex;
   align-items: flex-end;
@@ -1169,8 +1179,12 @@ video.work-image,
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 15px;
+  text-decoration: none;
 }
 
 .button:hover,

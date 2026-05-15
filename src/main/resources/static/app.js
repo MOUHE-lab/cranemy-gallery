@@ -1108,24 +1108,8 @@ async function handleUploadSubmit(event) {
 }
 
 function openAdmin(workId = state.selectedWorkId) {
-  if (!state.admin) {
-    openAuth("login", "请先使用管理员账号登录");
-    return;
-  }
-
-  state.view = "admin";
-  renderSession();
-  renderView();
-  const selectedId = state.works.some((work) => work.id === workId) ? workId : state.works[0]?.id;
-  renderAdminSelector();
-  elements.adminWorkSelect.value = selectedId || "";
-  fillAdminForm(selectedId);
-  renderAdminPanels();
-  elements.adminMessage.textContent = "";
-  window.requestAnimationFrame(() => {
-    elements.adminPage.scrollIntoView({ block: "start" });
-    elements.adminWorkSelect.focus();
-  });
+  const selectedId = state.works.some((work) => work.id === workId) ? workId : "";
+  window.location.href = selectedId ? `./admin.html?work=${encodeURIComponent(selectedId)}` : "./admin.html";
 }
 
 function closeAdmin() {

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理后台 | 作品展厅</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="返回作品展厅">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>管理后台</span>
+      </a>
+
+      <nav class="nav-actions" aria-label="后台账户">
+        <span id="sessionLabel" class="session-label">未登录</span>
+        <a class="button button-secondary" href="./">返回作品</a>
+        <button id="openAuthBtn" class="button button-primary" type="button">登录</button>
+        <button id="logoutBtn" class="button button-ghost hidden" type="button">退出</button>
+      </nav>
+    </header>
+
+    <main class="admin-page" aria-labelledby="adminTitle">
+      <section id="adminLocked" class="admin-locked">
+        <div class="admin-card">
+          <div class="section-title">
+            <h1 id="adminTitle">管理后台</h1>
+            <span>Admin</span>
+          </div>
+          <p id="adminLockedMessage">请先使用管理员账号登录。</p>
+          <button id="lockedLoginBtn" class="button button-primary" type="button">登录管理员账号</button>
+        </div>
+      </section>
+
+      <section id="adminShell" class="admin-shell hidden" aria-label="管理后台内容">
+        <div class="admin-page-head">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h1>管理后台</h1>
+          </div>
+          <a class="button button-ghost" href="./">返回作品</a>
+        </div>
+
+        <section class="admin-dashboard" aria-labelledby="adminDashboardTitle">
+          <div class="section-title">
+            <h2 id="adminDashboardTitle">数据小看板</h2>
+            <span>实时概览</span>
+          </div>
+          <div id="adminDashboardPanel" class="dashboard-grid"></div>
+        </section>
+
+        <form id="adminForm" class="admin-layout">
+          <section class="admin-card" aria-labelledby="adminWorksTitle">
+            <div class="section-title">
+              <h2 id="adminWorksTitle">作品编辑</h2>
+              <span>站点内容</span>
+            </div>
+
+            <div class="field">
+              <label for="adminWorkSelect">选择作品</label>
+              <select id="adminWorkSelect" class="select-input"></select>
+            </div>
+
+            <div class="field">
+              <label for="adminTitleInput">标题</label>
+              <input id="adminTitleInput" name="title" type="text" maxlength="80" required />
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminKindInput">类型</label>
+                <input id="adminKindInput" name="kind" type="text" maxlength="40" />
+              </div>
+              <div class="field">
+                <label for="adminCollectionInput">合集</label>
+                <input id="adminCollectionInput" name="collectionName" type="text" maxlength="60" />
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminYearInput">年份</label>
+                <input id="adminYearInput" name="year" type="text" maxlength="12" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="adminMediaTypeInput">媒体类型</label>
+              <select id="adminMediaTypeInput" class="select-input" name="mediaType">
+                <option value="image">图片</option>
+                <option value="video">视频</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="adminImageInput">媒体路径</label>
+              <input id="adminImageInput" name="image" type="text" maxlength="300" />
+            </div>
+
+            <div class="field">
+              <label for="adminSummaryInput">简介</label>
+              <textarea id="adminSummaryInput" name="summary" maxlength="160" required></textarea>
+            </div>
+
+            <div class="field">
+              <label for="adminBodyInput">详细介绍</label>
+              <textarea id="adminBodyInput" name="body" maxlength="1200"></textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminTagsInput">标签</label>
+                <input id="adminTagsInput" name="tags" type="text" maxlength="160" />
+              </div>
+              <div class="field">
+                <label for="adminOwnerInput">上传者显示名</label>
+                <input id="adminOwnerInput" name="ownerName" type="text" maxlength="40" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="adminFeaturedInput">排序权重</label>
+              <input id="adminFeaturedInput" name="featured" type="number" min="1" step="1" />
+            </div>
+
+            <label class="checkbox-field">
+              <input id="adminPrivateInput" name="privateWork" type="checkbox" />
+              <span>设为私密作品</span>
+            </label>
+
+            <p id="adminMessage" class="form-message" role="status"></p>
+
+            <div class="admin-actions">
+              <button class="button button-primary" type="submit">保存修改</button>
+              <button id="adminDeleteBtn" class="button button-danger" type="button">删除作品</button>
+            </div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminReviewsTitle">
+            <div class="section-title">
+              <h2 id="adminReviewsTitle">作品审核</h2>
+              <span id="adminReviewsCount">0</span>
+            </div>
+            <div id="adminReviewsPanel" class="admin-list"></div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminUsersTitle">
+            <div class="section-title">
+              <h2 id="adminUsersTitle">用户管理</h2>
+              <span id="adminUsersCount">0</span>
+            </div>
+            <div id="adminUsersPanel" class="admin-list"></div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminCommentsTitle">
+            <div class="section-title">
+              <h2 id="adminCommentsTitle">留言管理</h2>
+              <span id="adminCommentsCount">0</span>
+            </div>
+            <div id="adminCommentsPanel" class="admin-list"></div>
+          </section>
+        </form>
+      </section>
+    </main>
+
+    <dialog id="authDialog" class="auth-dialog" aria-labelledby="authTitle">
+      <form method="dialog" class="dialog-frame">
+        <button id="closeAuthBtn" class="icon-button dialog-close" type="button" aria-label="关闭">×</button>
+        <div class="dialog-head">
+          <p class="eyebrow">Admin</p>
+          <h2 id="authTitle">登录管理员账号</h2>
+        </div>
+
+        <div class="field">
+          <label for="usernameInput">账号</label>
+          <input id="usernameInput" type="text" minlength="3" maxlength="24" autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <label for="passwordInput">密码</label>
+          <input id="passwordInput" type="password" minlength="6" autocomplete="current-password" />
+        </div>
+
+        <p id="authMessage" class="form-message" role="status"></p>
+        <button id="submitAuthBtn" class="button button-primary button-full" type="button">登录</button>
+      </form>
+    </dialog>
+
+    <dialog id="workDetailDialog" class="work-detail-dialog" aria-labelledby="panelTitle">
+      <div class="work-detail-frame">
+        <button id="closeDetailBtn" class="icon-button dialog-close" type="button" aria-label="关闭">×</button>
+        <div id="detailPanel" class="detail-panel"></div>
+      </div>
+    </dialog>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+[Unit]
+Description=Portfolio Gallery Spring Boot Application
+After=network.target
+
+[Service]
+Type=simple
+User=portfolio
+Group=portfolio
+WorkingDirectory=/opt/portfolio-gallery
+EnvironmentFile=/etc/portfolio-gallery/portfolio.env
+ExecStart=/usr/bin/java -jar /opt/portfolio-gallery/portfolio-gallery.jar --spring.profiles.active=prod
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/portfolio-gallery /var/lib/portfolio-gallery
+
+[Install]
+WantedBy=multi-user.target

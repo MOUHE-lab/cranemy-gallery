@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">晨光档案</title>
+  <desc id="desc">清晨街区、窗影和文字片段组成的作品封面。</desc>
+  <rect width="900" height="675" fill="#efe2cf"/>
+  <rect x="70" y="76" width="760" height="523" rx="24" fill="#f9f4e9"/>
+  <rect x="112" y="118" width="235" height="393" fill="#d99722"/>
+  <rect x="377" y="118" width="411" height="393" fill="#e9c89d"/>
+  <rect x="410" y="154" width="80" height="320" fill="#9fb7a2"/>
+  <rect x="520" y="154" width="80" height="320" fill="#fff8ec"/>
+  <rect x="630" y="154" width="80" height="320" fill="#c6533b"/>
+  <path d="M112 511h676v46H112z" fill="#25231f"/>
+  <path d="M144 376c80-36 154-38 224-6s151 33 242 3 148-20 178 4v134H144z" fill="#14766d"/>
+  <path d="M172 174h138v14H172zm0 42h96v14h-96zm0 42h126v14H172z" fill="#25231f" opacity=".68"/>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">纸上花园</title>
+  <desc id="desc">纸张纹理和植物剪影组成的拼贴作品。</desc>
+  <rect width="900" height="675" fill="#e7dfcf"/>
+  <rect x="92" y="74" width="716" height="527" rx="18" fill="#fffaf0"/>
+  <path d="M157 522c49-143 113-225 194-246s146-82 195-183c45 139 29 248-48 327s-191 113-341 102z" fill="#657846"/>
+  <path d="M288 516c2-112 45-197 129-254" fill="none" stroke="#25231f" stroke-width="10" stroke-linecap="round"/>
+  <path d="M430 537c-27-120 0-205 81-256s117-108 108-170c79 119 96 226 51 322s-125 130-240 104z" fill="#d99722"/>
+  <path d="M512 510c6-93 36-164 92-212" fill="none" stroke="#25231f" stroke-width="10" stroke-linecap="round"/>
+  <rect x="145" y="132" width="177" height="25" fill="#c6533b"/>
+  <rect x="145" y="183" width="128" height="18" fill="#706b62"/>
+  <rect x="145" y="223" width="153" height="18" fill="#706b62"/>
+</svg>

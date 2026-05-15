@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">小剧场</title>
+  <desc id="desc">桌面物件和影子搭建的微型剧场场景。</desc>
+  <rect width="900" height="675" fill="#efe8da"/>
+  <path d="M95 485h710v91H95z" fill="#25231f"/>
+  <path d="M134 150h632v335H134z" fill="#fffdf8"/>
+  <path d="M134 150h632v67H134z" fill="#c6533b"/>
+  <rect x="218" y="289" width="160" height="196" rx="5" fill="#14766d"/>
+  <circle cx="298" cy="255" r="54" fill="#d99722"/>
+  <path d="M482 485V276h118c48 0 87 39 87 87v122z" fill="#657846"/>
+  <rect x="548" y="220" width="82" height="265" fill="#f5d5a9"/>
+  <path d="M218 485h382l131 91H311z" fill="#000" opacity=".2"/>
+  <path d="M193 217h248" stroke="#25231f" stroke-width="12" stroke-linecap="round"/>
+</svg>

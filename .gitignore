@@ -1,0 +1,11 @@
+data/
+uploads/
+target/
+.m2/
+.idea/
+.vscode/
+.server-port
+*.log
+*.env
+*.jar
+uploads-video-smoke/

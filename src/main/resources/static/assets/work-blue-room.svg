@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">蓝色房间</title>
+  <desc id="desc">蓝绿色房间中的桌子、椅子和一束光。</desc>
+  <rect width="900" height="675" fill="#cbd8cf"/>
+  <path d="M91 109h718v475H91z" fill="#ecf0e8"/>
+  <path d="M91 109h718v214H91z" fill="#7aa1a0"/>
+  <path d="M170 180h210v280H170z" fill="#315d60"/>
+  <path d="M538 143l147 342H466z" fill="#f6d47c" opacity=".86"/>
+  <rect x="442" y="359" width="244" height="28" fill="#25231f"/>
+  <rect x="468" y="387" width="22" height="107" fill="#25231f"/>
+  <rect x="636" y="387" width="22" height="107" fill="#25231f"/>
+  <circle cx="565" cy="321" r="53" fill="#c6533b"/>
+  <path d="M225 502c33-92 93-92 126 0" fill="none" stroke="#25231f" stroke-width="24" stroke-linecap="round"/>
+  <path d="M202 219h146v18H202zm0 50h112v18H202z" fill="#fff8ec" opacity=".85"/>
+</svg>

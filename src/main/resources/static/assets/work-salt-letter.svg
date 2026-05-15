@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">盐的来信</title>
+  <desc id="desc">海边书信、浪线和盐粒形状的作品封面。</desc>
+  <rect width="900" height="675" fill="#f5efe2"/>
+  <path d="M0 396c98-42 173-42 263 0s176 44 278 0 181-44 359 0v279H0z" fill="#14766d"/>
+  <path d="M0 454c88-31 178-31 270 0s178 31 262 0 169-31 368 0v221H0z" fill="#0d504b"/>
+  <rect x="209" y="94" width="482" height="372" rx="15" fill="#fffdf8" stroke="#ddd5c7" stroke-width="8"/>
+  <path d="M253 178h312v18H253zm0 58h380v18H253zm0 58h295v18H253zm0 58h353v18H253z" fill="#706b62"/>
+  <circle cx="641" cy="154" r="23" fill="#d99722"/>
+  <circle cx="284" cy="518" r="8" fill="#fffdf8"/>
+  <circle cx="347" cy="555" r="6" fill="#fffdf8"/>
+  <circle cx="599" cy="519" r="7" fill="#fffdf8"/>
+  <circle cx="683" cy="566" r="5" fill="#fffdf8"/>
+</svg>

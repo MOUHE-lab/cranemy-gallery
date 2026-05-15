@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>作品展厅</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#galleryPage" aria-label="作品展厅首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>作品展厅</span>
+      </a>
+
+      <nav class="nav-actions" aria-label="账户">
+        <span id="sessionLabel" class="session-label">未登录</span>
+        <button id="openAccountBtn" class="button button-secondary hidden" type="button">个人后台</button>
+        <button id="openAdminBtn" class="button button-secondary hidden" type="button">管理后台</button>
+        <button id="openAuthBtn" class="button button-primary" type="button">登录</button>
+        <button id="logoutBtn" class="button button-ghost hidden" type="button">退出</button>
+      </nav>
+    </header>
+
+    <main id="galleryPage" class="app-shell">
+      <section class="workspace" aria-labelledby="galleryTitle">
+        <section class="profile-panel" aria-labelledby="profileTitle">
+          <div class="profile-copy">
+            <p class="eyebrow">Cranemy Studio</p>
+            <h2 id="profileTitle">影像、文字和阶段性练习的陈列室</h2>
+            <p>这里收集我正在完成和继续打磨的作品，也欢迎你留下喜欢、疑问和一点真诚的反应。</p>
+          </div>
+          <div id="profileStats" class="profile-stats" aria-label="站点数据"></div>
+        </section>
+
+        <section class="showcase-3d" aria-labelledby="showcaseTitle">
+          <div class="showcase-copy">
+            <p class="eyebrow">Orbit</p>
+            <h2 id="showcaseTitle">作品星图</h2>
+            <p>排行前十的作品沿着一圈轨道转动，点击任意作品查看详情。</p>
+          </div>
+          <div id="showcaseStage" class="showcase-stage" tabindex="0" aria-label="作品星图">
+            <div id="showcaseOrbit" class="showcase-orbit"></div>
+          </div>
+        </section>
+
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <p class="eyebrow">Portfolio</p>
+            <h1 id="galleryTitle">我的作品</h1>
+          </div>
+
+          <div class="controls" aria-label="作品筛选">
+            <label class="search-box">
+              <span class="visually-hidden">搜索作品</span>
+              <input id="searchInput" type="search" placeholder="搜索标题、文字或标签" autocomplete="off" />
+            </label>
+            <div class="segmented" role="group" aria-label="排序方式">
+              <button class="segment active" data-sort="featured" type="button">精选</button>
+              <button class="segment" data-sort="votes" type="button">票数</button>
+              <button class="segment" data-sort="favorites" type="button">收藏</button>
+              <button class="segment" data-sort="comments" type="button">留言</button>
+              <button class="segment" data-sort="views" type="button">浏览</button>
+            </div>
+            <button id="openUploadBtn" class="button button-primary" type="button">上传作品</button>
+          </div>
+        </div>
+
+        <div id="collectionTabs" class="collection-tabs" aria-label="作品合集"></div>
+        <div id="categoryTabs" class="category-tabs" aria-label="作品分类"></div>
+
+        <div id="galleryGrid" class="gallery-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <dialog id="workDetailDialog" class="work-detail-dialog" aria-labelledby="panelTitle">
+      <div class="work-detail-frame">
+        <button id="closeDetailBtn" class="icon-button dialog-close" type="button" aria-label="关闭">×</button>
+        <div id="detailPanel" class="detail-panel"></div>
+      </div>
+    </dialog>
+
+    <section id="accountPage" class="admin-page hidden" aria-labelledby="accountTitle">
+      <div class="admin-shell">
+        <div class="admin-page-head">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h1 id="accountTitle">个人后台</h1>
+          </div>
+          <button id="closeAccountBtn" class="button button-ghost" type="button">返回作品</button>
+        </div>
+
+        <div class="account-layout">
+          <section class="admin-card" aria-labelledby="accountWorksTitle">
+            <div class="section-title">
+              <h2 id="accountWorksTitle">我的作品</h2>
+              <span id="accountWorksCount">0</span>
+            </div>
+            <div id="accountWorksPanel" class="admin-list"></div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="accountCommentsTitle">
+            <div class="section-title">
+              <h2 id="accountCommentsTitle">留言管理</h2>
+              <span id="accountCommentsCount">0</span>
+            </div>
+            <div id="accountCommentsPanel" class="admin-list"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminPage" class="admin-page hidden" aria-labelledby="adminTitle">
+      <div class="admin-shell">
+        <div class="admin-page-head">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h1 id="adminTitle">管理后台</h1>
+          </div>
+          <button id="closeAdminBtn" class="button button-ghost" type="button">返回作品</button>
+        </div>
+
+        <section class="admin-dashboard" aria-labelledby="adminDashboardTitle">
+          <div class="section-title">
+            <h2 id="adminDashboardTitle">数据小看板</h2>
+            <span>实时概览</span>
+          </div>
+          <div id="adminDashboardPanel" class="dashboard-grid"></div>
+        </section>
+
+        <form id="adminForm" class="admin-layout">
+          <section class="admin-card" aria-labelledby="adminWorksTitle">
+            <div class="section-title">
+              <h2 id="adminWorksTitle">作品编辑</h2>
+              <span>站点内容</span>
+            </div>
+
+            <div class="field">
+              <label for="adminWorkSelect">选择作品</label>
+              <select id="adminWorkSelect" class="select-input"></select>
+            </div>
+
+            <div class="field">
+              <label for="adminTitleInput">标题</label>
+              <input id="adminTitleInput" name="title" type="text" maxlength="80" required />
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminKindInput">类型</label>
+                <input id="adminKindInput" name="kind" type="text" maxlength="40" />
+              </div>
+              <div class="field">
+                <label for="adminCollectionInput">合集</label>
+                <input id="adminCollectionInput" name="collectionName" type="text" maxlength="60" />
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminYearInput">年份</label>
+                <input id="adminYearInput" name="year" type="text" maxlength="12" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="adminMediaTypeInput">媒体类型</label>
+              <select id="adminMediaTypeInput" class="select-input" name="mediaType">
+                <option value="image">图片</option>
+                <option value="video">视频</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="adminImageInput">媒体路径</label>
+              <input id="adminImageInput" name="image" type="text" maxlength="300" />
+            </div>
+
+            <div class="field">
+              <label for="adminSummaryInput">简介</label>
+              <textarea id="adminSummaryInput" name="summary" maxlength="160" required></textarea>
+            </div>
+
+            <div class="field">
+              <label for="adminBodyInput">详细介绍</label>
+              <textarea id="adminBodyInput" name="body" maxlength="1200"></textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="adminTagsInput">标签</label>
+                <input id="adminTagsInput" name="tags" type="text" maxlength="160" />
+              </div>
+              <div class="field">
+                <label for="adminOwnerInput">上传者显示名</label>
+                <input id="adminOwnerInput" name="ownerName" type="text" maxlength="40" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="adminFeaturedInput">排序权重</label>
+              <input id="adminFeaturedInput" name="featured" type="number" min="1" step="1" />
+            </div>
+
+            <label class="checkbox-field">
+              <input id="adminPrivateInput" name="privateWork" type="checkbox" />
+              <span>设为私密作品</span>
+            </label>
+
+            <p id="adminMessage" class="form-message" role="status"></p>
+
+            <div class="admin-actions">
+              <button class="button button-primary" type="submit">保存修改</button>
+              <button id="adminDeleteBtn" class="button button-danger" type="button">删除作品</button>
+            </div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminReviewsTitle">
+            <div class="section-title">
+              <h2 id="adminReviewsTitle">作品审核</h2>
+              <span id="adminReviewsCount">0</span>
+            </div>
+            <div id="adminReviewsPanel" class="admin-list"></div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminUsersTitle">
+            <div class="section-title">
+              <h2 id="adminUsersTitle">用户管理</h2>
+              <span id="adminUsersCount">0</span>
+            </div>
+            <div id="adminUsersPanel" class="admin-list"></div>
+          </section>
+
+          <section class="admin-card" aria-labelledby="adminCommentsTitle">
+            <div class="section-title">
+              <h2 id="adminCommentsTitle">留言管理</h2>
+              <span id="adminCommentsCount">0</span>
+            </div>
+            <div id="adminCommentsPanel" class="admin-list"></div>
+          </section>
+        </form>
+      </div>
+    </section>
+
+    <dialog id="authDialog" class="auth-dialog" aria-labelledby="authTitle">
+      <form method="dialog" class="dialog-frame">
+        <button id="closeAuthBtn" class="icon-button dialog-close" type="button" aria-label="关闭">×</button>
+        <div class="dialog-head">
+          <p class="eyebrow">Account</p>
+          <h2 id="authTitle">登录账号</h2>
+        </div>
+
+        <div class="segmented wide" role="group" aria-label="账号操作">
+          <button id="loginTab" class="segment active" type="button">登录</button>
+          <button id="registerTab" class="segment" type="button">注册</button>
+        </div>
+
+        <div class="field">
+          <label for="usernameInput">账号</label>
+          <input id="usernameInput" type="text" minlength="3" maxlength="24" autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <label for="passwordInput">密码</label>
+          <input id="passwordInput" type="password" minlength="6" autocomplete="current-password" />
+        </div>
+
+        <p id="authMessage" class="form-message" role="status"></p>
+
+        <button id="submitAuthBtn" class="button button-primary button-full" type="button">登录</button>
+      </form>
+    </dialog>
+
+    <dialog id="uploadDialog" class="auth-dialog upload-dialog" aria-labelledby="uploadTitle">
+      <form id="uploadForm" class="dialog-frame upload-form">
+        <button id="closeUploadBtn" class="icon-button dialog-close" type="button" aria-label="关闭">×</button>
+        <div class="dialog-head">
+          <p class="eyebrow">New Work</p>
+          <h2 id="uploadTitle">上传作品</h2>
+        </div>
+
+        <div class="field">
+          <label for="workTitleInput">标题</label>
+          <input id="workTitleInput" name="title" type="text" maxlength="80" required />
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="workKindInput">类型</label>
+            <input id="workKindInput" name="kind" type="text" maxlength="40" placeholder="摄影 / 插画" />
+          </div>
+          <div class="field">
+            <label for="workCollectionInput">合集</label>
+            <input id="workCollectionInput" name="collectionName" type="text" maxlength="60" placeholder="城市影像 / 视频短片" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="workYearInput">年份</label>
+            <input id="workYearInput" name="year" type="text" maxlength="12" placeholder="2026" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="workSummaryInput">简介</label>
+          <textarea id="workSummaryInput" name="summary" maxlength="160" required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="workBodyInput">详细介绍</label>
+          <textarea id="workBodyInput" name="body" maxlength="1200"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="workTagsInput">标签</label>
+          <input id="workTagsInput" name="tags" type="text" maxlength="160" placeholder="摄影, 城市, 散文" />
+        </div>
+
+        <div class="field">
+          <label for="workMediaTypeInput">作品类型</label>
+          <select id="workMediaTypeInput" class="select-input" name="mediaType">
+            <option value="image">图片作品</option>
+            <option value="video">视频作品</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label id="workImageLabel" for="workImageInput">图片</label>
+          <input id="workImageInput" name="image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" required />
+        </div>
+
+        <label class="checkbox-field">
+          <input id="workPrivateInput" name="privateWork" type="checkbox" value="true" />
+          <span>先设为私密作品</span>
+        </label>
+
+        <p id="uploadMessage" class="form-message" role="status"></p>
+
+        <button class="button button-primary button-full" type="submit">保存作品</button>
+      </form>
+    </dialog>
+
+    <template id="workCardTemplate">
+      <article class="work-card">
+        <button class="work-hit-area" type="button">
+          <img class="work-image" alt="" />
+          <span class="vote-badge"></span>
+          <span class="work-kind"></span>
+          <span class="work-title"></span>
+          <span class="work-summary"></span>
+        </button>
+        <div class="work-meta"></div>
+      </article>
+    </template>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

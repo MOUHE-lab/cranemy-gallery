@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 675" role="img" aria-labelledby="title desc">
+  <title id="title">正午信号</title>
+  <desc id="desc">高对比图形和放映活动视觉海报。</desc>
+  <rect width="900" height="675" fill="#fffdf8"/>
+  <rect x="82" y="74" width="736" height="527" fill="#25231f"/>
+  <circle cx="450" cy="338" r="194" fill="#d99722"/>
+  <path d="M276 198l342 140-342 140z" fill="#fffdf8"/>
+  <path d="M344 255l205 83-205 83z" fill="#c6533b"/>
+  <rect x="142" y="122" width="181" height="20" fill="#fffdf8"/>
+  <rect x="142" y="538" width="290" height="20" fill="#fffdf8"/>
+  <rect x="587" y="538" width="171" height="20" fill="#14766d"/>
+</svg>

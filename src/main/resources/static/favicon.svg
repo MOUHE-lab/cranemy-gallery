@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="作品展厅">
+  <rect x="8" y="8" width="46" height="46" rx="8" fill="#fffdf8" stroke="#25231f" stroke-width="4" />
+  <path d="M12 52 52 12" stroke="#c6533b" stroke-width="8" stroke-linecap="round" />
+  <path d="M14 12h34L14 46Z" fill="#14766d" />
+  <path d="M50 52H16L50 18Z" fill="#d99722" />
+  <rect x="8" y="8" width="46" height="46" rx="8" fill="none" stroke="#25231f" stroke-width="4" />
+</svg>

@@ -7,6 +7,7 @@ const state = {
   voteCounts: {},
   favoriteCounts: {},
   viewCounts: {},
+  loadError: "",
 };
 
 const elements = {
@@ -80,8 +81,9 @@ function applyServerState(data) {
 async function loadServerState() {
   try {
     applyServerState(await apiRequest("/api/state"));
+    state.loadError = "";
   } catch (error) {
-    elements.adminLockedMessage.textContent = error.message;
+    state.loadError = `${error.message || "服务暂时无法连接"}。请确认服务已启动后刷新页面。`;
   }
   render();
 }
@@ -90,6 +92,11 @@ function render() {
   renderSession();
   elements.adminLocked.classList.toggle("hidden", state.admin);
   elements.adminShell.classList.toggle("hidden", !state.admin);
+
+  if (state.loadError) {
+    elements.adminLockedMessage.textContent = state.loadError;
+    return;
+  }
 
   if (!state.currentUser) {
     elements.adminLockedMessage.textContent = "请先使用管理员账号登录。";

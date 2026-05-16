@@ -17,12 +17,15 @@ const state = {
   myVote: "",
   myFavorites: [],
   apiReady: false,
+  loading: true,
+  loadError: "",
   viewedWorkIds: new Set(),
 };
 
 const showcaseState = {
   rotation: 0,
   tilt: -8,
+  focusWorkId: "",
   dragging: false,
   paused: false,
   moved: false,
@@ -49,6 +52,7 @@ const elements = {
   galleryGrid: document.querySelector("#galleryGrid"),
   showcaseStage: document.querySelector("#showcaseStage"),
   showcaseOrbit: document.querySelector("#showcaseOrbit"),
+  showcaseFocus: document.querySelector("#showcaseFocus"),
   workDetailDialog: document.querySelector("#workDetailDialog"),
   closeDetailBtn: document.querySelector("#closeDetailBtn"),
   detailPanel: document.querySelector("#detailPanel"),
@@ -82,6 +86,7 @@ const elements = {
   uploadPreview: document.querySelector("#uploadPreview"),
   uploadMessage: document.querySelector("#uploadMessage"),
   uploadSubmitBtn: document.querySelector("#uploadSubmitBtn"),
+  toast: document.querySelector("#toast"),
   closeAdminBtn: document.querySelector("#closeAdminBtn"),
   adminDashboardPanel: document.querySelector("#adminDashboardPanel"),
   adminForm: document.querySelector("#adminForm"),
@@ -122,12 +127,18 @@ async function apiRequest(path, options = {}) {
 }
 
 async function loadServerState() {
+  state.loading = true;
+  state.loadError = "";
+  render();
   try {
     const data = await apiRequest("/api/state");
     applyServerState(data);
     state.apiReady = true;
-  } catch {
+  } catch (error) {
     state.apiReady = false;
+    state.loadError = error.message || "无法连接到服务，请确认 Spring Boot 已启动";
+  } finally {
+    state.loading = false;
   }
 
   render();
@@ -147,6 +158,10 @@ function applyServerState(data) {
 
   if (!state.works.some((work) => work.id === state.selectedWorkId)) {
     state.selectedWorkId = state.works[0]?.id || "";
+  }
+
+  if (!state.works.some((work) => work.id === showcaseState.focusWorkId)) {
+    showcaseState.focusWorkId = state.selectedWorkId;
   }
 }
 
@@ -399,6 +414,156 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function showToast(message) {
+  if (!elements.toast || !message) {
+    return;
+  }
+
+  elements.toast.textContent = message;
+  elements.toast.classList.remove("hidden");
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
+    elements.toast.classList.add("hidden");
+  }, 3600);
+}
+
+function renderStatePanel(title, body, action = "") {
+  return `
+    <div class="state-panel">
+      <strong>${escapeHTML(title)}</strong>
+      <p>${escapeHTML(body)}</p>
+      ${action}
+    </div>
+  `;
+}
+
+function syncSelectedWorkViews() {
+  document.querySelectorAll("[data-showcase-work]").forEach((card) => {
+    const selected = card.dataset.showcaseWork === showcaseState.focusWorkId;
+    card.classList.toggle("selected", selected);
+    card.setAttribute("aria-pressed", String(selected));
+  });
+
+  document.querySelectorAll("[data-work-card]").forEach((card) => {
+    card.classList.toggle("selected", card.dataset.workCard === state.selectedWorkId);
+  });
+}
+
+function setSelectedWork(workId) {
+  if (!workId) {
+    return;
+  }
+
+  state.selectedWorkId = workId;
+  showcaseState.focusWorkId = workId;
+  syncSelectedWorkViews();
+  renderShowcaseFocus();
+}
+
+function getShowcaseFocusWork(works = getShowcaseWorks()) {
+  if (!works.length) {
+    return null;
+  }
+
+  return works.find((work) => work.id === showcaseState.focusWorkId)
+    || works.find((work) => work.id === state.selectedWorkId)
+    || works[0];
+}
+
+function getShowcaseWorkIndex(works, workId) {
+  return works.findIndex((work) => work.id === workId);
+}
+
+function alignShowcaseToWork(works, index) {
+  if (!works.length || index < 0) {
+    return;
+  }
+
+  const angle = (index / works.length) * 360;
+  showcaseState.rotation = 90 - angle;
+  updateShowcaseTransform();
+}
+
+function moveShowcaseFocus(direction) {
+  const works = getShowcaseWorks();
+  if (!works.length) {
+    return;
+  }
+
+  const currentIndex = getShowcaseWorkIndex(works, showcaseState.focusWorkId);
+  const baseIndex = currentIndex >= 0 ? currentIndex : 0;
+  const nextIndex = (baseIndex + direction + works.length) % works.length;
+  const nextWork = works[nextIndex];
+  setSelectedWork(nextWork.id);
+  alignShowcaseToWork(works, nextIndex);
+  elements.showcaseOrbit
+    .querySelector(`[data-showcase-work="${CSS.escape(nextWork.id)}"]`)
+    ?.focus({ preventScroll: true });
+}
+
+function renderShowcaseFocusStats(work) {
+  return [
+    ["票", getVoteCount(work.id)],
+    ["收藏", getFavoriteCount(work.id)],
+    ["浏览", getViewCount(work.id)],
+  ]
+    .map(
+      ([label, value]) => `
+        <span>
+          <strong>${value}</strong>
+          ${label}
+        </span>
+      `,
+    )
+    .join("");
+}
+
+function renderShowcaseFocus(works = getShowcaseWorks()) {
+  if (!elements.showcaseFocus) {
+    return;
+  }
+
+  if (state.loading) {
+    elements.showcaseFocus.classList.add("empty");
+    elements.showcaseFocus.innerHTML = `<p>正在连接作品展厅...</p>`;
+    return;
+  }
+
+  if (!state.apiReady) {
+    elements.showcaseFocus.classList.add("empty");
+    elements.showcaseFocus.innerHTML = `<p>服务连接后，星图会在这里展示作品焦点。</p>`;
+    return;
+  }
+
+  const work = getShowcaseFocusWork(works);
+  if (!work) {
+    elements.showcaseFocus.classList.add("empty");
+    elements.showcaseFocus.innerHTML = `<p>当前筛选下还没有作品。</p>`;
+    return;
+  }
+
+  showcaseState.focusWorkId = work.id;
+
+  const rank = getShowcaseWorkIndex(works, work.id) + 1;
+  elements.showcaseFocus.classList.remove("empty");
+  elements.showcaseFocus.innerHTML = `
+    <span class="showcase-focus-rank">Top ${rank}</span>
+    <h3>${escapeHTML(work.title)}</h3>
+    <p>${escapeHTML(work.summary || work.body || "这件作品还没有填写简介。")}</p>
+    <div class="showcase-focus-meta">
+      <span>${escapeHTML(getMediaType(work) === "video" ? "视频" : "图片")}</span>
+      <span>${escapeHTML(work.kind || "未分类")}</span>
+      <span>${escapeHTML(getCollectionName(work) || "未归入合集")}</span>
+    </div>
+    <div class="showcase-focus-stats">${renderShowcaseFocusStats(work)}</div>
+    <button class="button button-secondary showcase-focus-action" type="button" data-showcase-open="${escapeHTML(work.id)}">查看详情</button>
+  `;
+  elements.showcaseFocus.querySelector("[data-showcase-open]").addEventListener("click", () => {
+    openWorkDetail(work.id);
+  });
+  syncSelectedWorkViews();
+}
+
 function updateShowcaseTransform() {
   const cards = [...elements.showcaseOrbit.querySelectorAll(".showcase-card")];
   const count = cards.length;
@@ -417,14 +582,15 @@ function updateShowcaseTransform() {
     const y = Math.sin(angle) * radiusY + centerLift;
     const depth = (Math.sin(angle) + 1) / 2;
     const hovered = card.matches(":hover, :focus-visible");
-    const scale = 0.78 + depth * 0.24 + (hovered ? 0.08 : 0);
-    const opacity = 0.66 + depth * 0.34;
+    const selected = card.dataset.showcaseWork === showcaseState.focusWorkId;
+    const scale = 0.78 + depth * 0.24 + (hovered || selected ? 0.08 : 0);
+    const opacity = 0.62 + depth * 0.38 + (hovered || selected ? 0.05 : 0);
 
     card.style.setProperty("--showcase-x", `${x}px`);
     card.style.setProperty("--showcase-y", `${y}px`);
     card.style.setProperty("--showcase-scale", scale.toFixed(3));
-    card.style.setProperty("--showcase-opacity", opacity.toFixed(3));
-    card.style.zIndex = String(Math.round(depth * 100));
+    card.style.setProperty("--showcase-opacity", clamp(opacity, 0.62, 1).toFixed(3));
+    card.style.zIndex = String(Math.round(depth * 100) + (selected ? 120 : 0));
   });
 }
 
@@ -454,24 +620,37 @@ function getShowcaseWorks() {
 function renderShowcase() {
   const works = getShowcaseWorks();
 
+  if (state.loading) {
+    elements.showcaseOrbit.innerHTML = `<div class="showcase-empty loading-state">正在加载作品星图</div>`;
+    renderShowcaseFocus(works);
+    updateShowcaseTransform();
+    return;
+  }
+
   if (!state.apiReady) {
-    elements.showcaseOrbit.innerHTML = `<div class="showcase-empty">服务启动后显示作品星图</div>`;
+    elements.showcaseOrbit.innerHTML = `<div class="showcase-empty">暂时无法连接服务</div>`;
+    renderShowcaseFocus(works);
     updateShowcaseTransform();
     return;
   }
 
   if (!works.length) {
     elements.showcaseOrbit.innerHTML = `<div class="showcase-empty">暂无匹配作品</div>`;
+    renderShowcaseFocus(works);
     updateShowcaseTransform();
     return;
   }
+
+  const focusWork = getShowcaseFocusWork(works);
+  showcaseState.focusWorkId = focusWork?.id || "";
 
   const step = 360 / works.length;
 
   elements.showcaseOrbit.innerHTML = works
     .map((work, index) => {
       const angle = Number((index * step).toFixed(3));
-      const selected = work.id === state.selectedWorkId;
+      const selected = work.id === showcaseState.focusWorkId;
+      const rank = String(index + 1).padStart(2, "0");
       return `
         <button
           class="showcase-card ${selected ? "selected" : ""}"
@@ -479,41 +658,58 @@ function renderShowcase() {
           type="button"
           data-showcase-work="${escapeHTML(work.id)}"
           data-showcase-angle="${angle}"
+          aria-pressed="${selected}"
           aria-label="打开作品 ${escapeHTML(work.title)}"
         >
           ${renderShowcaseMedia(work)}
+          <span class="showcase-rank">#${rank}</span>
           <span class="showcase-glow" aria-hidden="true"></span>
           <span class="showcase-card-copy">
             <strong>${escapeHTML(work.title)}</strong>
-            <span>${getVoteCount(work.id)} 票 · ${getFavoriteCount(work.id)} 收藏</span>
+            <span>${getVoteCount(work.id)} 票 · ${getFavoriteCount(work.id)} 收藏 · ${getViewCount(work.id)} 浏览</span>
           </span>
         </button>
       `;
     })
     .join("");
 
+  renderShowcaseFocus(works);
   updateShowcaseTransform();
 }
 
 function renderGallery() {
-  renderShowcase();
   const fragment = document.createDocumentFragment();
   const filteredWorks = getFilteredWorks();
 
   elements.galleryGrid.innerHTML = "";
 
+  if (state.loading) {
+    renderShowcase();
+    const loading = document.createElement("div");
+    loading.className = "empty-state loading-state";
+    loading.innerHTML = renderStatePanel("正在加载作品", "作品、留言和互动数据正在同步。");
+    elements.galleryGrid.append(loading);
+    return;
+  }
+
   if (!state.apiReady) {
+    renderShowcase();
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "请通过 Spring Boot 服务访问：mvn spring-boot:run";
+    empty.innerHTML = renderStatePanel(
+      "服务暂时没有响应",
+      state.loadError || "请确认 Spring Boot 服务正在运行，然后重试。",
+      `<button class="button button-primary" type="button" data-retry-state>重新加载</button>`,
+    );
     elements.galleryGrid.append(empty);
     return;
   }
 
   if (!filteredWorks.length) {
+    renderShowcase();
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "没有匹配的作品";
+    empty.innerHTML = renderStatePanel("没有匹配的作品", "换一个关键词、分类或排序方式再试试。");
     elements.galleryGrid.append(empty);
     return;
   }
@@ -521,6 +717,8 @@ function renderGallery() {
   if (!filteredWorks.some((work) => work.id === state.selectedWorkId) && !elements.workDetailDialog.open) {
     state.selectedWorkId = filteredWorks[0].id;
   }
+
+  renderShowcase();
 
   filteredWorks.forEach((work) => {
     const card = elements.workCardTemplate.content.firstElementChild.cloneNode(true);
@@ -532,6 +730,7 @@ function renderGallery() {
     const summary = card.querySelector(".work-summary");
     const meta = card.querySelector(".work-meta");
 
+    card.dataset.workCard = work.id;
     card.classList.toggle("selected", work.id === state.selectedWorkId);
     renderCardMedia(image, work);
     voteBadge.textContent = `${getVoteCount(work.id)} 票`;
@@ -824,7 +1023,7 @@ async function handleDeleteWork() {
       render();
     }
   } catch (error) {
-    alert(error.message);
+    showToast(error.message);
   }
 }
 
@@ -886,7 +1085,7 @@ async function handleCommentListAction(event) {
     applyServerState(data);
     render();
   } catch (error) {
-    alert(error.message);
+    showToast(error.message);
   }
 }
 
@@ -1137,7 +1336,7 @@ async function handleAccountWorkAction(event) {
       render();
     }
   } catch (error) {
-    alert(error.message);
+    showToast(error.message);
   }
 }
 
@@ -1157,7 +1356,7 @@ async function handleAccountCommentAction(event) {
     applyServerState(data);
     render();
   } catch (error) {
-    alert(error.message);
+    showToast(error.message);
   }
 }
 
@@ -1699,17 +1898,31 @@ function handleShowcaseClick(event) {
     return;
   }
 
+  setSelectedWork(button.dataset.showcaseWork);
   openWorkDetail(button.dataset.showcaseWork);
 }
 
+function handleShowcaseCardFocus(event) {
+  const button = event.target.closest("[data-showcase-work]");
+  if (!button) {
+    return;
+  }
+
+  setSelectedWork(button.dataset.showcaseWork);
+  updateShowcaseTransform();
+}
+
 function startShowcaseDrag(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) {
+    return;
+  }
+
   const card = event.target.closest("[data-showcase-work]");
   if (card) {
     showcaseState.pendingWorkId = card.dataset.showcaseWork;
-    showcaseState.moved = false;
-    showcaseState.startX = event.clientX;
-    showcaseState.startY = event.clientY;
-    return;
+    setSelectedWork(card.dataset.showcaseWork);
+  } else {
+    showcaseState.pendingWorkId = "";
   }
 
   showcaseState.dragging = true;
@@ -1737,25 +1950,20 @@ function moveShowcaseDrag(event) {
 }
 
 function endShowcaseDrag(event) {
-  if (showcaseState.pendingWorkId) {
-    const deltaX = event.clientX - showcaseState.startX;
-    const deltaY = event.clientY - showcaseState.startY;
-    const workId = showcaseState.pendingWorkId;
-    showcaseState.pendingWorkId = "";
-    showcaseState.moved = Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6;
-    if (!showcaseState.moved) {
-      showcaseState.ignoreClick = true;
-      openWorkDetail(workId);
-    }
-    return;
-  }
-
   if (!showcaseState.dragging || event.pointerId !== showcaseState.pointerId) {
     return;
   }
 
-  showcaseState.ignoreClick = showcaseState.moved;
+  const workId = showcaseState.pendingWorkId;
+  const openedFromPointer = Boolean(workId && !showcaseState.moved);
+  if (openedFromPointer) {
+    showcaseState.ignoreClick = true;
+    openWorkDetail(workId);
+  }
+
+  showcaseState.ignoreClick = openedFromPointer || showcaseState.moved;
   showcaseState.dragging = false;
+  showcaseState.pendingWorkId = "";
   showcaseState.pointerId = null;
   elements.showcaseStage.classList.remove("dragging");
   if (elements.showcaseStage.hasPointerCapture(event.pointerId)) {
@@ -1775,13 +1983,20 @@ function handleShowcaseWheel(event) {
 }
 
 function nudgeShowcase(event) {
-  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+  if (!["ArrowLeft", "ArrowRight", "Enter", " "].includes(event.key)) {
     return;
   }
 
   event.preventDefault();
-  showcaseState.rotation += event.key === "ArrowLeft" ? -24 : 24;
-  updateShowcaseTransform();
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    moveShowcaseFocus(event.key === "ArrowLeft" ? -1 : 1);
+    return;
+  }
+
+  const work = getShowcaseFocusWork();
+  if (work) {
+    openWorkDetail(work.id);
+  }
 }
 
 function startShowcaseAnimation() {
@@ -1837,7 +2052,15 @@ function bindEvents() {
     renderGallery();
   });
 
+  elements.galleryGrid.addEventListener("click", (event) => {
+    if (event.target.closest("[data-retry-state]")) {
+      loadServerState();
+    }
+  });
+
   elements.showcaseOrbit.addEventListener("click", handleShowcaseClick);
+  elements.showcaseOrbit.addEventListener("mouseover", handleShowcaseCardFocus);
+  elements.showcaseOrbit.addEventListener("focusin", handleShowcaseCardFocus);
   elements.showcaseStage.addEventListener("pointerdown", startShowcaseDrag);
   elements.showcaseStage.addEventListener("pointermove", moveShowcaseDrag);
   elements.showcaseStage.addEventListener("pointerup", endShowcaseDrag);

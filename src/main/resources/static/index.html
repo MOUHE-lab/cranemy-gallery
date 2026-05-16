@@ -3,7 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>作品展厅</title>
+    <meta
+      name="description"
+      content="Cranemy Studio 的作品展厅，展示影像、文字、插画、短文和阶段性创作练习。"
+    />
+    <meta name="theme-color" content="#14766d" />
+    <meta property="og:title" content="作品展厅 | Cranemy Studio" />
+    <meta
+      property="og:description"
+      content="浏览 Cranemy Studio 的影像、文字和阶段性创作练习，留下喜欢、留言和真实反馈。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
+    <title>作品展厅 | Cranemy Studio</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./site.webmanifest" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -21,6 +35,7 @@
         <button id="logoutBtn" class="button button-ghost hidden" type="button">退出</button>
       </nav>
     </header>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <main id="galleryPage" class="app-shell">
       <section class="workspace" aria-labelledby="galleryTitle">
@@ -38,6 +53,7 @@
             <p class="eyebrow">Orbit</p>
             <h2 id="showcaseTitle">作品星图</h2>
             <p>排行前十的作品沿着一圈轨道转动，点击任意作品查看详情。</p>
+            <div id="showcaseFocus" class="showcase-focus" aria-live="polite"></div>
           </div>
           <div id="showcaseStage" class="showcase-stage" tabindex="0" aria-label="作品星图">
             <div id="showcaseOrbit" class="showcase-orbit"></div>
@@ -353,6 +369,7 @@
           <span class="work-kind"></span>
           <span class="work-title"></span>
           <span class="work-summary"></span>
+          <span class="work-open-cue">查看详情</span>
         </button>
         <div class="work-meta"></div>
       </article>

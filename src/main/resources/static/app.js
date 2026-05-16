@@ -37,6 +37,8 @@ const showcaseState = {
   lastFrame: 0,
 };
 
+let uploadPreviewUrl = "";
+
 const elements = {
   galleryPage: document.querySelector("#galleryPage"),
   accountPage: document.querySelector("#accountPage"),
@@ -77,7 +79,9 @@ const elements = {
   workMediaTypeInput: document.querySelector("#workMediaTypeInput"),
   workImageInput: document.querySelector("#workImageInput"),
   workImageLabel: document.querySelector("#workImageLabel"),
+  uploadPreview: document.querySelector("#uploadPreview"),
   uploadMessage: document.querySelector("#uploadMessage"),
+  uploadSubmitBtn: document.querySelector("#uploadSubmitBtn"),
   closeAdminBtn: document.querySelector("#closeAdminBtn"),
   adminDashboardPanel: document.querySelector("#adminDashboardPanel"),
   adminForm: document.querySelector("#adminForm"),
@@ -184,6 +188,16 @@ function getWorkStatusLabel(status) {
 
 function getWorkStatusSuffix(work) {
   return work?.status === "pending" ? " · 待审核" : "";
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 KB";
+  }
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+  return `${Math.ceil(bytes / 1024)} KB`;
 }
 
 function renderWorkVisibility(work) {
@@ -569,6 +583,26 @@ function closeWorkDetail() {
   elements.detailPanel.innerHTML = "";
 }
 
+function renderDetailMeta(work) {
+  const items = [
+    ["类型", getMediaType(work) === "video" ? "视频" : "图片"],
+    ["分类", work.kind || "未分类"],
+    ["年份", work.year || "未填写"],
+    ["合集", getCollectionName(work) || "未归入合集"],
+  ];
+
+  return items
+    .map(
+      ([label, value]) => `
+        <div class="detail-meta-item">
+          <span>${label}</span>
+          <strong>${escapeHTML(value)}</strong>
+        </div>
+      `,
+    )
+    .join("");
+}
+
 function renderDetailMedia(work) {
   if (getMediaType(work) === "video") {
     return `
@@ -592,6 +626,8 @@ function renderDetail() {
   const isVoted = state.myVote === work.id;
   const favored = isFavorite(work.id);
   const comments = state.comments[work.id] || [];
+  const detailBody = work.body || work.summary || "这件作品还没有填写详细介绍。";
+  const statusBadges = renderWorkVisibility(work);
   const deleteButton = work.canDelete
     ? `<button id="deleteWorkBtn" class="button button-danger" type="button">删除作品</button>`
     : "";
@@ -602,16 +638,17 @@ function renderDetail() {
   elements.detailPanel.innerHTML = `
     ${renderDetailMedia(work)}
     <div class="detail-body">
-      <div class="detail-text">
-        <p class="eyebrow">${getCollectionName(work) ? `${escapeHTML(getCollectionName(work))} · ` : ""}${escapeHTML(work.kind)} · ${escapeHTML(work.year)}</p>
-        <h2 id="panelTitle">${escapeHTML(work.title)}</h2>
-        <p>${escapeHTML(work.body)}</p>
-        <p class="owner-line">上传者：${escapeHTML(work.ownerName || "站点")} ${renderWorkVisibility(work)}</p>
+      <div class="detail-head">
+        <div class="detail-text">
+          <p class="eyebrow">${getCollectionName(work) ? `${escapeHTML(getCollectionName(work))} · ` : ""}${escapeHTML(work.kind)} · ${escapeHTML(work.year)}</p>
+          <h2 id="panelTitle">${escapeHTML(work.title)}</h2>
+          <p class="detail-summary">${escapeHTML(work.summary || detailBody)}</p>
+          <p class="owner-line">上传者：${escapeHTML(work.ownerName || "站点")}</p>
+        </div>
+        ${statusBadges ? `<div class="detail-status">${statusBadges}</div>` : ""}
       </div>
 
-      <div class="tag-row">
-        ${(work.tags || []).map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("")}
-      </div>
+      <div class="detail-meta-grid">${renderDetailMeta(work)}</div>
 
       <div class="stats-row" aria-label="作品数据">
         <div class="stat"><strong>${getVoteCount(work.id)}</strong><span>喜欢票</span></div>
@@ -630,6 +667,19 @@ function renderDetail() {
         ${editButton}
         ${deleteButton}
       </div>
+
+      <section class="detail-section" aria-labelledby="detailBodyTitle">
+        <div class="section-title">
+          <h3 id="detailBodyTitle">创作说明</h3>
+        </div>
+        <p>${escapeHTML(detailBody)}</p>
+      </section>
+
+      <section class="detail-section" aria-label="作品标签">
+        <div class="tag-row">
+          ${(work.tags || []).map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("") || `<span class="tag">未添加标签</span>`}
+        </div>
+      </section>
 
       <section class="comment-section" aria-labelledby="commentsTitle">
         <div class="section-title">
@@ -915,12 +965,55 @@ function openUpload() {
   elements.uploadMessage.textContent = "";
   elements.uploadForm.reset();
   updateUploadMediaMode();
+  clearUploadPreview();
   elements.uploadDialog.showModal();
   window.setTimeout(() => document.querySelector("#workTitleInput").focus(), 80);
 }
 
 function closeUpload() {
+  clearUploadPreview();
   elements.uploadDialog.close();
+}
+
+function clearUploadPreview() {
+  if (uploadPreviewUrl) {
+    URL.revokeObjectURL(uploadPreviewUrl);
+    uploadPreviewUrl = "";
+  }
+  elements.uploadPreview.classList.add("empty");
+  elements.uploadPreview.innerHTML = `<span>选择文件后会在这里预览</span>`;
+}
+
+function renderUploadPreview() {
+  const file = elements.workImageInput.files?.[0];
+  clearUploadPreview();
+  elements.uploadMessage.textContent = "";
+  if (!file) {
+    return;
+  }
+
+  const isVideo = elements.workMediaTypeInput.value === "video";
+  const maxBytes = isVideo ? 209715200 : 8388608;
+  const mediaLabel = isVideo ? "视频" : "图片";
+  uploadPreviewUrl = URL.createObjectURL(file);
+  elements.uploadPreview.classList.remove("empty");
+  elements.uploadPreview.innerHTML = `
+    <div class="upload-preview-media">
+      ${
+        isVideo
+          ? `<video src="${uploadPreviewUrl}" muted controls preload="metadata" playsinline></video>`
+          : `<img src="${uploadPreviewUrl}" alt="待上传作品预览" />`
+      }
+    </div>
+    <div class="upload-preview-copy">
+      <strong>${escapeHTML(file.name)}</strong>
+      <p>${mediaLabel} · ${formatFileSize(file.size)} · 上限 ${formatFileSize(maxBytes)}</p>
+    </div>
+  `;
+
+  if (file.size > maxBytes) {
+    elements.uploadMessage.textContent = `${mediaLabel}文件过大，请选择 ${formatFileSize(maxBytes)} 以内的文件`;
+  }
 }
 
 function openAccount() {
@@ -1074,12 +1167,15 @@ function updateUploadMediaMode() {
   elements.workImageInput.accept = isVideo
     ? "video/mp4,video/webm,.mp4,.webm"
     : "image/jpeg,image/png,image/gif,image/webp";
+  elements.workImageInput.value = "";
+  clearUploadPreview();
 }
 
 async function handleUploadSubmit(event) {
   event.preventDefault();
 
   const formData = new FormData(elements.uploadForm);
+  const uploadFile = formData.get("image");
   if (!String(formData.get("title") || "").trim()) {
     elements.uploadMessage.textContent = "请填写作品标题";
     return;
@@ -1088,12 +1184,21 @@ async function handleUploadSubmit(event) {
     elements.uploadMessage.textContent = "请填写作品简介";
     return;
   }
-  if (!formData.get("image")?.size) {
+  if (!uploadFile?.size) {
     elements.uploadMessage.textContent = elements.workMediaTypeInput.value === "video" ? "请选择作品视频" : "请选择作品图片";
+    return;
+  }
+  const isVideo = elements.workMediaTypeInput.value === "video";
+  const maxBytes = isVideo ? 209715200 : 8388608;
+  if (uploadFile.size > maxBytes) {
+    elements.uploadMessage.textContent = `${isVideo ? "视频" : "图片"}文件过大，请选择 ${formatFileSize(maxBytes)} 以内的文件`;
     return;
   }
 
   try {
+    elements.uploadSubmitBtn.disabled = true;
+    elements.uploadSubmitBtn.textContent = "保存中...";
+    elements.uploadMessage.textContent = "正在上传作品...";
     const data = await apiRequest("/api/works", {
       method: "POST",
       body: formData,
@@ -1104,6 +1209,9 @@ async function handleUploadSubmit(event) {
     render();
   } catch (error) {
     elements.uploadMessage.textContent = error.message;
+  } finally {
+    elements.uploadSubmitBtn.disabled = false;
+    elements.uploadSubmitBtn.textContent = "保存作品";
   }
 }
 
@@ -1751,6 +1859,7 @@ function bindEvents() {
   elements.openUploadBtn.addEventListener("click", openUpload);
   elements.closeUploadBtn.addEventListener("click", closeUpload);
   elements.workMediaTypeInput.addEventListener("change", updateUploadMediaMode);
+  elements.workImageInput.addEventListener("change", renderUploadPreview);
   elements.uploadForm.addEventListener("submit", handleUploadSubmit);
   elements.openAdminBtn.addEventListener("click", () => openAdmin());
   elements.closeAdminBtn.addEventListener("click", closeAdmin);

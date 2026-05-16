@@ -330,6 +330,10 @@
           <input id="workImageInput" name="image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" required />
         </div>
 
+        <div id="uploadPreview" class="upload-preview empty" aria-live="polite">
+          <span>选择文件后会在这里预览</span>
+        </div>
+
         <label class="checkbox-field">
           <input id="workPrivateInput" name="privateWork" type="checkbox" value="true" />
           <span>先设为私密作品</span>
@@ -337,7 +341,7 @@
 
         <p id="uploadMessage" class="form-message" role="status"></p>
 
-        <button class="button button-primary button-full" type="submit">保存作品</button>
+        <button id="uploadSubmitBtn" class="button button-primary button-full" type="submit">保存作品</button>
       </form>
     </dialog>
 

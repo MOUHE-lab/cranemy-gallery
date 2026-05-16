@@ -19,6 +19,7 @@ const state = {
   apiReady: false,
   loading: true,
   loadError: "",
+  pendingSharedWorkId: "",
   viewedWorkIds: new Set(),
 };
 
@@ -41,6 +42,10 @@ const showcaseState = {
 };
 
 let uploadPreviewUrl = "";
+
+function getWorkIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("work") || "";
+}
 
 const elements = {
   galleryPage: document.querySelector("#galleryPage"),
@@ -129,6 +134,7 @@ async function apiRequest(path, options = {}) {
 async function loadServerState() {
   state.loading = true;
   state.loadError = "";
+  state.pendingSharedWorkId = getWorkIdFromUrl();
   render();
   try {
     const data = await apiRequest("/api/state");
@@ -142,6 +148,7 @@ async function loadServerState() {
   }
 
   render();
+  openSharedWorkFromUrl();
 }
 
 function applyServerState(data) {
@@ -425,6 +432,74 @@ function showToast(message) {
   showToast.timer = window.setTimeout(() => {
     elements.toast.classList.add("hidden");
   }, 3600);
+}
+
+function getWorkShareUrl(workId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("work", workId);
+  url.hash = "";
+  return url.toString();
+}
+
+function setWorkUrl(workId, replace = false) {
+  const url = new URL(window.location.href);
+  if (workId) {
+    url.searchParams.set("work", workId);
+  } else {
+    url.searchParams.delete("work");
+  }
+  url.hash = "";
+
+  const method = replace ? "replaceState" : "pushState";
+  window.history[method]({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.top = "-1000px";
+  document.body.append(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+}
+
+async function copySelectedWorkLink() {
+  const work = getSelectedWork();
+  if (!work) {
+    return;
+  }
+
+  try {
+    await copyText(getWorkShareUrl(work.id));
+    showToast("作品链接已复制");
+  } catch {
+    showToast("复制失败，可以从地址栏手动复制当前链接");
+  }
+}
+
+function openSharedWorkFromUrl() {
+  const sharedWorkId = state.pendingSharedWorkId || getWorkIdFromUrl();
+  if (!sharedWorkId || !state.apiReady || state.loading) {
+    return;
+  }
+
+  state.pendingSharedWorkId = "";
+  const work = state.works.find((item) => item.id === sharedWorkId);
+  if (!work) {
+    setWorkUrl("", true);
+    showToast("这个作品链接暂时不可访问，可能已被删除或设为私密");
+    return;
+  }
+
+  openWorkDetail(sharedWorkId, { replaceUrl: true });
 }
 
 function renderStatePanel(title, body, action = "") {
@@ -766,20 +841,26 @@ function renderCardMedia(imageElement, work) {
   imageElement.replaceWith(video);
 }
 
-function openWorkDetail(workId) {
+function openWorkDetail(workId, options = {}) {
   state.selectedWorkId = workId;
   renderGallery();
   renderDetail();
   if (!elements.workDetailDialog.open) {
     elements.workDetailDialog.showModal();
   }
+  if (options.syncUrl !== false) {
+    setWorkUrl(workId, Boolean(options.replaceUrl));
+  }
 }
 
-function closeWorkDetail() {
+function closeWorkDetail(options = {}) {
   if (elements.workDetailDialog.open) {
     elements.workDetailDialog.close();
   }
   elements.detailPanel.innerHTML = "";
+  if (options.clearUrl !== false && getWorkIdFromUrl()) {
+    setWorkUrl("", Boolean(options.replaceUrl));
+  }
 }
 
 function renderDetailMeta(work) {
@@ -863,6 +944,7 @@ function renderDetail() {
         <button id="voteBtn" class="button button-secondary ${isVoted ? "active" : ""}" type="button">
           ${isVoted ? "已投给这件作品" : "投给这件作品"}
         </button>
+        <button id="copyWorkLinkBtn" class="button button-secondary" type="button">复制链接</button>
         ${editButton}
         ${deleteButton}
       </div>
@@ -898,6 +980,7 @@ function renderDetail() {
 
   elements.detailPanel.querySelector("#favoriteBtn").addEventListener("click", handleFavorite);
   elements.detailPanel.querySelector("#voteBtn").addEventListener("click", handleVote);
+  elements.detailPanel.querySelector("#copyWorkLinkBtn").addEventListener("click", copySelectedWorkLink);
   elements.detailPanel.querySelector("#commentForm").addEventListener("submit", handleCommentSubmit);
   elements.detailPanel.querySelector(".comment-list").addEventListener("click", handleCommentListAction);
   elements.detailPanel.querySelector("#deleteWorkBtn")?.addEventListener("click", handleDeleteWork);
@@ -1999,6 +2082,24 @@ function nudgeShowcase(event) {
   }
 }
 
+function handleHistoryChange() {
+  const workId = getWorkIdFromUrl();
+  if (workId) {
+    if (state.works.some((work) => work.id === workId)) {
+      openWorkDetail(workId, { syncUrl: false });
+    } else if (state.apiReady) {
+      showToast("这个作品链接暂时不可访问，可能已被删除或设为私密");
+    } else {
+      state.pendingSharedWorkId = workId;
+    }
+    return;
+  }
+
+  if (elements.workDetailDialog.open) {
+    closeWorkDetail({ clearUrl: false });
+  }
+}
+
 function startShowcaseAnimation() {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion || showcaseState.frame) {
@@ -2114,7 +2215,12 @@ function bindEvents() {
   elements.workDetailDialog.addEventListener("close", () => {
     elements.detailPanel.querySelectorAll("video").forEach((video) => video.pause());
     elements.detailPanel.innerHTML = "";
+    if (getWorkIdFromUrl()) {
+      setWorkUrl("");
+    }
   });
+
+  window.addEventListener("popstate", handleHistoryChange);
 
   elements.passwordInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {

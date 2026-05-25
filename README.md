@@ -99,6 +99,8 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 
 详细 Linux 部署步骤见 `deploy/DEPLOY.md`。上线后可以访问 `/api/health` 检查服务、数据库和上传目录状态。
 
+网站底部已经配置 ICP 备案号 `鲁ICP备2026026265号`，并链接到工信部备案系统。公安联网备案通过后，再把公安备案号和图标补到同一个页脚区域。
+
 ## 个人后台
 
 登录后页面顶部会出现“个人后台”按钮。普通用户可以在这里：

@@ -141,6 +141,31 @@ img {
   padding: 28px clamp(16px, 4vw, 44px) 40px;
 }
 
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 6px clamp(16px, 4vw, 44px) 30px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.site-footer a {
+  color: var(--muted);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--teal);
+  text-decoration: underline;
+}
+
 .admin-shell {
   display: grid;
   gap: 20px;
@@ -1743,6 +1768,11 @@ video.work-image,
 
   .app-shell {
     padding-top: 20px;
+  }
+
+  .site-footer {
+    padding-bottom: 24px;
+    font-size: 12px;
   }
 
   h1 {
